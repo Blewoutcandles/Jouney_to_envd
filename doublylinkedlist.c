@@ -105,6 +105,21 @@ void displayvaluesback(){
   printf("NULL\n");
 }
 
+void find_the_node(int searchthiselement){
+  dll * traverse = head;
+  int returnpos = 0;
+  while(traverse){
+    if(searchthiselement == traverse -> val){
+      printf("The searching element found at position : %d\n", returnpos);
+      return;
+    } 
+    traverse = traverse -> next;
+    ++returnpos;
+  }
+  printf("The searching element was not found");
+  return ;
+}
+
 void freeallnodes(){
   dll* traverse = head;
   while(traverse!= NULL){
@@ -126,6 +141,7 @@ int main(){
   displayvaluesback();
   displayvaluesfront();
 
+  find_the_node(10);
   freeallnodes();
   
   return 0;

@@ -5,7 +5,7 @@ using std :: cout;
 using std :: cin;
 using std :: endl;
 using std :: vector;
-using std :: unordered_map;
+using std :: unordered_map; 
 using std :: map;
 using std :: sort;
 using std :: max;
@@ -127,16 +127,92 @@ void Insert_into_binary_tree(treenode** root, int insertion_value){
   
 }
 
+int getPredecessorValue(treenode* node){
+
+  while(node && node -> rightchild != nullptr){
+    node = node -> rightchild;//find the rightmost child of the leftsubtree
+  }
+
+  return node -> val;
+}
+
+int getSuccessorValue(treenode* node){
+
+  while(node->leftchild != nullptr){
+    node = node -> leftchild;//find the leftmost child of the rightsubtree
+  }
+
+  return node -> val;
+}
+
+treenode* delete_from_binary_tree(treenode* node, int deletekey){
+  if(node == nullptr){
+    return nullptr;
+  }
+
+  if(node -> val > deletekey){
+    node -> leftchild = delete_from_binary_tree(node -> leftchild, deletekey);
+  }else if(node -> val < deletekey){
+    node -> rightchild = delete_from_binary_tree(node -> rightchild, deletekey);
+  }
+  else{
+    //if the current node contains the values delete the key and replace it with the inorder successor or predecessor
+    //check the height of leftsubtree and rightsubtree. take the predecessor or successor from the greater subtree
+    if(node -> leftchild == nullptr && node -> rightchild == nullptr){
+      delete node;
+      return nullptr;
+    }
+
+    int heightof_leftsubtree = getheight(node -> leftchild);
+    int heightof_rightsubtree = getheight(node -> rightchild);
+
+    if(heightof_leftsubtree > heightof_rightsubtree){
+      //if the leftsubtree is taller then delete the node (predecessor)
+      node -> val = getPredecessorValue(node -> leftchild);
+      node -> leftchild = delete_from_binary_tree(node -> leftchild, node -> val);
+    }else if(heightof_leftsubtree <= heightof_rightsubtree){
+      node -> val = getSuccessorValue(node -> rightchild);
+      node -> rightchild = delete_from_binary_tree(node -> rightchild, node -> val);
+    }
+  }
+  
+  node -> height = 1+ std:: max(getheight(node -> leftchild), getheight(node -> rightchild));
+
+  int balancefactor = balanceFactor(node);
+  int balancefactor_leftchild = balanceFactor(node ->leftchild);
+  int balancefactor_rightchild = balanceFactor(node -> rightchild);
+
+  //perform rotation wherever there is an imbalance occurs
+  if(balancefactor == 2){
+    if(balancefactor_leftchild >= 0){
+      LLrotation(&node);
+    }else if(balancefactor_leftchild == -1){
+      LRrotation(&node);
+    }
+  }else if(balancefactor == -2){
+    if(balancefactor_rightchild > 0){
+      RLrotation(&node);
+    }else if(balancefactor_rightchild <= 0){
+      RRrotation(&node);
+    }
+  }
+
+  return node;
+
+}
+
 int main(){
   //create a avl tree with ll, rr, lr, rl rotations
   treenode* root = nullptr;
 
   Insert_into_binary_tree(&root, 30);
   Insert_into_binary_tree(&root, 50);
-  // Insert_into_binary_tree(&root, 10);
+  Insert_into_binary_tree(&root, 10);
 
   Insert_into_binary_tree(&root, 40);
-  // Insert_into_binary_tree(&root, 50);
+  Insert_into_binary_tree(&root, 50);
+
+  root = delete_from_binary_tree(root, 10);
   
   delete root;
 
@@ -249,8 +325,66 @@ result:
 
 
 
-
-
-
-
+*/
+/*key flow diagram for deletion
+            ┌──────────────────────────────────────┐
+            │ delete_from_binary_tree(node, key)    │
+            └──────────────────────────────────────┘
+                          │
+                          ▼
+              Is node NULL? ────► YES ──► return NULL
+                          │
+                         NO
+                          │
+                          ▼
+            ┌─────────────────────────────────────┐
+            │ 1. Search for key (BST property)     │
+            └─────────────────────────────────────┘
+                          │
+       ┌───────────────────────────────────────┐
+       │ IF key < node->val                     │
+       │     node->leftchild = delete(left, key)│
+       └───────────────────────────────────────┘
+                          │
+       ┌───────────────────────────────────────┐
+       │ ELSE IF key > node->val                │
+       │     node->rightchild = delete(right,key)│
+       └───────────────────────────────────────┘
+                          │
+                          ▼
+   ┌────────────────────────────────────────────┐
+   │ ELSE  (node->val == key)                    │
+   │   CASE 1: No child                          │
+   │       delete node, return NULL              │
+   │   CASE 2: One child                         │
+   │       Replace node with child, delete old   │
+   │   CASE 3: Two children                      │
+   │       Choose predecessor/successor based    │
+   │       on subtree height                     │
+   │       Replace node->val with pred/succ val  │
+   │       Recursively delete pred/succ from     │
+   │       corresponding subtree                 │
+   └────────────────────────────────────────────┘
+                          │
+                          ▼
+            ┌─────────────────────────────────────┐
+            │ 2. Update node height                │
+            └─────────────────────────────────────┘
+                          │
+                          ▼
+            ┌─────────────────────────────────────┐
+            │ 3. Calculate balance factor          │
+            └─────────────────────────────────────┘
+                          │
+                          ▼
+  ┌────────────────────────────────────────────────────────┐
+  │ 4. Perform rotations if unbalanced                     │
+  │   IF balance > 1 and left child's balance >= 0 → LL     │
+  │   IF balance > 1 and left child's balance < 0  → LR     │
+  │   IF balance < -1 and right child's balance <= 0 → RR   │
+  │   IF balance < -1 and right child's balance > 0  → RL   │
+  └────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+                  return node
 */
